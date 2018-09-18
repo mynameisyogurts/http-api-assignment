@@ -6,12 +6,101 @@
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
+const handleRepsonse = (xhr, parseResponse) => {
+        const content = document.querySelector('#content');
+        
+        let obj = {};
+        
+        if (parseResponse) {
+            obj = JSON.parse(xhr.response);
+            console.dir(obj);
+        } else {
+            console.log('recieved');
+        }
+        
+        switch(xhr.status) {
+            case 200:
+                content.innerHTML = '<b>Success</b>';
+                content.innerHTML += '<p>'+ obj.message +'</p>';
+                console.log('success');
+                break;
+                case 400:
+                content.innerHTML = '<b>Bad Request</b>';
+                content.innerHTML += '<p>'+ obj.message +'</p>';
+                break;
+            case 401:
+                content.innerHTML = '<b>Unauthorized</b>';
+                content.innerHTML += '<p>'+ obj.message +'</p>';
+                break;
+            case 403:
+                content.innerHTML = '<b>Forbidden</b>';
+                content.innerHTML += '<p>'+ obj.message +'</p>';
+                break;
+            case 404:
+                content.innerHTML = '<b>Resource Not Found</b>';
+                content.innerHTML += '<p>'+ obj.message +'</p>';
+                console.log('not found');
+                break;
+            case 500:
+                content.innerHTML = '<b>Internal Server Error</b>';
+                content.innerHTML += '<p>'+ obj.message +'</p>';
+                break;
+            case 501:
+                content.innerHTML = '<b>Not Implemented</b>';
+                content.innerHTML += '<p>'+ obj.message +'</p>';
+                break;
+            default:
+                content.innerHTML = 'Error code not implemented by client.';
+                break;
+        }
+    };
+
+    const requestUpdate = (e, pageForm) => {
+        const url = pageForm.querySelector('#page').value;
+        const method = pageForm.getAttribute('method');
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        
+        const fileType = pageForm.querySelector('#type').value;
+        let fileName = '';
+        
+        if (fileType === 'JSON'){
+            fileName = 'application/json';
+        } else if (fileType === 'XML') {
+            fileName = 'text/xml';
+        }
+        
+        xhr.setRequestHeader('Accept', fileName);
+        
+        if (method == 'get') {
+            xhr.onload = () => handleRepsonse(xhr, true);
+        } else {
+            xhr.onload = () => handleRepsonse(xhr, false);
+        }
+        
+        xhr.send();
+        
+        e.preventDefault();
+        return false;
+    };
+
+    const init = () => {
+        const pageForm = document.querySelector('#pageForm');
+        
+        const getPage = (e) => requestUpdate(e, pageForm);
+        
+        pageForm.addEventListener('submit', getPage);
+    };
+
+    window.onload = init;
 
   </script>
 </head>
 <body>
   <section id="top">
     <h3>Status Code Tests</h3>
+      <form id="pageForm" action="/getPage" method="get">
     <select id="page">
       <option value="/success">Success</option>
       <option value="/badRequest">Bad Request</option>
@@ -26,6 +115,7 @@
       <option value="text/xml">XML</option>
     </select>
     <button id="send">Send</button>
+      </form>
   </section>
   <section id="content">
   </section>
